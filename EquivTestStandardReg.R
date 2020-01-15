@@ -166,18 +166,12 @@ pval <- p1 <- p2 <- rep(0,K)
 
 for(k in 1:(K+1)){ 
 
-if(-DELTA[k,1]!=DELTA[k,2]){
 p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
 p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
 pval[k] <- max(c(p1[k],p2[k]))
-}
-
-# or alternatively:
-if(-DELTA[k,1]==DELTA[k,2]){	
-pval[k] <- pt((abs(beta_hat[k]) - DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=TRUE)
-}
 
 }
+
 names(beta_hat)<-paste("beta", c(1:dim(X)[2])-1, sep="_")
 return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 }
@@ -232,27 +226,17 @@ for(k in 1:K){
 for(k in 1:K){ 
 if(!random){
 
-if(-DELTA[k,1]==DELTA[k,2]){	
-	pval[k] <- pt(abs(b_vec[k]/SE_beta_FIX[k]), df=N-K-1, ncp=DELTA[k,2]*(sqrt(N*(1-R2XkdotXminK[k])))/sqrt(1-R2YdotX[k]) ) }
-	
-	
-if(-DELTA[k,1]!=DELTA[k,2]){
 	p1[k] <- pt(b_vec[k]/SE_beta_FIX[k], N-K-1, DELTA[k,1]*sqrt(N*(1-R2XkdotXminK[k]))/sqrt(1-R2YdotX[k]), lower.tail=FALSE)
 	p2[k] <- pt(-b_vec[k]/SE_beta_FIX[k], N-K-1, -DELTA[k,2]*sqrt(N*(1-R2XkdotXminK[k]))/sqrt(1-R2YdotX[k]), lower.tail=FALSE)
 	pval[k] <- max(c(p1[k], p2[k]))
-		}
 
 	}
 
 if(random){
-
-if(-DELTA[k,1]==DELTA[k,2]){	pval[k] <- pt((abs(b_vec[k])-DELTA[k,2])/SE_std_beta_RDM[k], df=N-K-1) }
 	
-if(-DELTA[k,1]!=DELTA[k,2]){ 
 	p1[k] <- pt((b_vec[k] - DELTA[k,1])/SE_std_beta_RDM[k], df=N-K-1, 0, lower.tail=FALSE)
 	p2[k] <- pt((DELTA[k,2] - b_vec[k])/SE_std_beta_RDM[k], df=N-K-1, 0, lower.tail=FALSE)	
 	pval[k] <- max(c(p1[k], p2[k])) 	
-	}
 	
 	}
 }

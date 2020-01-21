@@ -271,9 +271,9 @@ K <- dim(Xmatrix)[2]
 if(length(DELTA)!=K){DELTA <- rep(DELTA[1], K) }
 
 
-lmmod <- summary(lm(y~X[,-1]))
+lmmod <- summary(lm(Y~X[,-1]))
 R2 <- lmmod$r.squared
-diffR2k <- unlist(lapply(c(2:(K+1)), function(k) {R2-summary(lm(y~X[,-k]))$r.squared}))
+diffR2k <- unlist(lapply(c(2:(K+1)), function(k) {R2-summary(lm(Y~X[,-k]))$r.squared}))
 
 if(random==FALSE){
 pval <- rep(0, K)
@@ -284,7 +284,7 @@ for(k in 1:K){
 
 if(random==TRUE){
 SE_std_beta_RDM <- DEL(X = Xmatrix, y = Y)$SEs
-pval <- rep(0, K)
+R2XkdotXminK <- pval <- rep(0, K)
 for(k in 1:K){
 	R2XkdotXminK[k] <- (summary(lm(X[,-1][,k]~X[,-1][,-k])))$r.squared
 	pval[k] <- pt((sqrt(diffR2k[k]) - sqrt(DELTA[k]))/ (SE_std_beta_RDM[k]*sqrt(1-R2XkdotXminK[k])), N-K-1, lower.tail=TRUE)

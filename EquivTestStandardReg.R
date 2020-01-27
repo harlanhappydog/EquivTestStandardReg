@@ -293,3 +293,34 @@ for(k in 1:K){
 
 return(list(diffR2k= diffR2k, pval= pval, DELTA= DELTA))
 }
+	      
+#################################################################################	      
+library("BayesFactor")
+library("mvtnorm")
+
+
+BFstandardBeta<-function(Y= yvec, Xmatrix= Xmat, BFthres=3, random=FALSE){
+
+K<-dim(Xmatrix)[2]
+mydata<-data.frame(Y, Xmatrix)
+colnames(mydata)<- c(c("yvector"),paste("X",1:K,sep=""))
+head(mydata)
+BFmod <- regressionBF(yvector~. , data= mydata)
+
+BF<-result<-rep(0,K)
+for(k in 1:K){
+
+whichk<-paste("X",k,sep="")
+BF_without_k <-BFmod[!grepl(whichk,names(BFmod)$numerator)][
+which.max(nchar(names(BFmod)$numerator[!grepl(whichk,names(BFmod)$numerator)]))]
+BF_full <- BFmod[which.max(nchar(names(BFmod)$numerator))]
+#BF[k] <- as.numeric(slot(BF_without_k/BF_full,"bayesFactor")[1])
+
+BF[k] <- exp(as.numeric(slot(BF_without_k,"bayesFactor")[1]))/exp(as.numeric(slot(BF_full,"bayesFactor")[1]))
+
+if(BF[k]<= 1/BFthres){result[k]<-"positive" }
+if(BF[k]>BFthres){result[k]<-"negative"}	
+if(BF[k]> 1/BFthres & BF[k]<BFthres){result[k]<-"inconclusive"}
+}
+return(list(BF=c(BF), BFthres=c(BFthres),conclusion= result))
+}

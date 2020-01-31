@@ -324,3 +324,23 @@ if(BF[k]> 1/BFthres & BF[k]<BFthres){result[k]<-"inconclusive"}
 }
 return(list(BF=c(BF), BFthres=c(BFthres),conclusion= result))
 }
+
+	      
+	      
+#################################################################################
+std_beta_CET<-function(Y = rnorm(100), Xmatrix = cbind(rnorm(100),rnorm(100)), 
+		       k = 1, alpha1 = 0.05, random = FALSE, DELTA = rep(0.1, dim(Xmatrix)[2])){
+
+N <- length(Y); K <- dim(Xmatrix)[2]
+lmmod <- summary(lm(Y ~ Xmatrix)); R2 <- lmmod$r.squared
+beta_hat <- lmmod$coef[-1,1];
+R2XkXk <- unlist(lapply(c(1:K), function(k) {summary(lm(Xmatrix[,k]~ Xmatrix[,-k]))$r.squared}))
+std_beta_hat <- beta_hat*(apply(Xmatrix,2,sd)/sd(Y))
+SE_std_beta_FIX <- sqrt((1-R2)/((1-R2XkXk)*(N-K-1)))
+
+pval1 <- 2*pt(abs(std_beta_hat/SE_std_beta_FIX), N-K-1, lower.tail=FALSE)[k]
+pval2 <- equivstandardBeta(Y = Y , Xmatrix = Xmatrix , DELTA = DELTA , random = random)$pval[k]
+if(pval1 < alpha1){return(list(pval=pval1,result=1))}
+if(pval1 >= alpha1){return(list(pval=pval2,result=-1)) }
+	}
+	

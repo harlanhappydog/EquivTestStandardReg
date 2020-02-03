@@ -299,7 +299,7 @@ library("BayesFactor")
 library("mvtnorm")
 
 
-BFstandardBeta<-function(Y= yvec, Xmatrix= Xmat, BFthres=3, random=FALSE){
+BFstandardBeta<-function(Y= yvec, Xmatrix= Xmat, BFthres=3, random=FALSE, kvec=c(1:K)){
 
 K<-dim(Xmatrix)[2]
 mydata<-data.frame(Y, Xmatrix)
@@ -307,8 +307,8 @@ colnames(mydata)<- c(c("yvector"),paste("X",1:K,sep=""))
 head(mydata)
 BFmod <- regressionBF(yvector~. , data= mydata)
 
-BF<-result<-rep(0,K)
-for(k in 1:K){
+BF<-result <- 0*kvec
+for(k in kvec){
 
 whichk<-paste("X",k,sep="")
 BF_without_k <-BFmod[!grepl(whichk,names(BFmod)$numerator)][

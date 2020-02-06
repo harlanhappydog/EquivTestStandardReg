@@ -142,7 +142,7 @@ for(i in 1:p) CIs[i,] <- c(beta[i] - tc  * DELse[i], beta[i], beta[i] + tc *  DE
 ##					- a matrix of dim K by 2 for equiv. margin = [DELTA[k,1], DELTA[k,2]] for k in 1,..K
 
 
-equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1){
+equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=c(1:(K+1))){
 
 X <- cbind(1,Xmatrix)
 N <- dim(X[,-1])[1]
@@ -162,9 +162,9 @@ beta_hat <- lmmod$coef[,1]
 SE_beta_hat <- lmmod$coef[,2]
 CI <- confint(lm(Y~X[,-1]), level = 0.90)
 
-pval <- p1 <- p2 <- rep(0,K)
+pval <- p1 <- p2 <- 0*kvec
 
-for(k in 1:(K+1)){ 
+for(k in 1: kvec){ 
 
 p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
 p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
@@ -190,7 +190,7 @@ return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 ##					- a matrix of dim K by 2 for equiv. margin = [DELTA[k,1], DELTA[k,2]] for k in 1,..K
 ## random is TRUE or FALSE to indicate if regressors are assumed fixed or random.
 
-equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2]), random= FALSE){
+equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2]), random= FALSE, kvec=1:K){
 
 X <- cbind(1,Xmatrix)
 N <- dim(X[,-1])[1]
@@ -209,13 +209,13 @@ sigma2 <- apply(X[,-1],2, var)
 standard_beta<-unstandard_beta*(c(sqrt(sigma2))/c(sqrt(sigma2_Y)))
 
 
-p1 <- p2 <- pval <- R2YdotX <- R2XkdotXminK <- lambda_U2 <- lambda_L2 <- upperCI2 <- lowerCI2 <-upperCI <- lowerCI <- SE_beta_FIX <- lambda_U <- lambda_L <- rep(0,K)
+p1 <- p2 <- pval <- R2YdotX <- R2XkdotXminK <- lambda_U2 <- lambda_L2 <- upperCI2 <- lowerCI2 <-upperCI <- lowerCI <- SE_beta_FIX <- lambda_U <- lambda_L <- 0*kvec
 
 b_vec <- standard_beta
 
 if(random){ SE_std_beta_RDM <- DEL(X=Xmatrix, y=Y)$SEs }
 
-for(k in 1:K){ 
+for(k in kvec){ 
 	R2XkdotXminK[k] <- (summary(lm(X[,-1][,k]~X[,-1][,-k])))$r.squared
 	R2YdotX[k]      <- (summary(lm(Y~X[,-1])))$r.squared
 	SE_beta_FIX[k]  <- sqrt( (1-R2YdotX[k])/( (1-R2XkdotXminK[k])*(N-K-1)  ) )  # see Kelley2007 eq80.
@@ -223,7 +223,7 @@ for(k in 1:K){
 
 }
 
-for(k in 1:K){ 
+for(k in kvec){ 
 if(!random){
 
 	p1[k] <- pt(b_vec[k]/SE_beta_FIX[k], N-K-1, DELTA[k,1]*sqrt(N*(1-R2XkdotXminK[k]))/sqrt(1-R2YdotX[k]), lower.tail=FALSE)

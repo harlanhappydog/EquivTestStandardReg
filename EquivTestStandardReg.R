@@ -10,7 +10,7 @@
 ##					- a vector of length K for equiv. margin = [-DELTA[k], DELTA[k]] for k in 1,..K
 
 
-equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1){
+equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=c(1:(K+1))){
 
 Xmatrix <-cbind(Xmatrix)	
 Xmatrix<-cbind(Xmatrix)
@@ -31,7 +31,7 @@ CI <- confint(lm(Y~X[,-1]), level = 0.90)
 
 pval <- p1 <- p2 <- rep(0,K)
 
-for(k in 1:(K+1)){ 
+for(k in kvec){ 
 
 p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
 p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
@@ -53,7 +53,7 @@ return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 ## DELTA is either 	- a single number for equiv. margin = [-DELTA, DELTA] for k in 1,..K
 ##					- a vector of length K for equiv. margin = [-DELTA[k], DELTA[k]] for k in 1,..K
 
-equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2])){
+equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2]), kvec=c(1:K)){
 Xmatrix <-cbind(Xmatrix)	
 X <- cbind(1,Xmatrix)
 N <- dim(cbind(X[,-1]))[1]
@@ -75,7 +75,7 @@ pval_fix<- pval_rdm <- Kupper<- Klower <- p1 <- p2 <- pval <- R2YdotX <- R2Xkdot
 
 b_vec <- standard_beta
 
-for(k in 1:K){ 
+for(k in kvec){ 
 	
 	Xmink <- cbind(cbind(X[,-1])[,-k])
 	if(dim(Xmink)[2]==0){ Xmink <- rep(1,N) }
@@ -88,7 +88,7 @@ for(k in 1:K){
 
 }
 
-for(k in 1:K){ 
+for(k in kvec){ 
 
 	p1[k] <- pt(b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=DELTA[k,1]*sqrt(((1-R2XkdotXminK[k])*N)/(1 - (DELTA[k,1]^2*(1-R2XkdotXminK[k])))), lower.tail=FALSE)
 	p2[k] <- pt(-b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=-DELTA[k,2]*sqrt(((1-R2XkdotXminK[k])*N)/(1 - (DELTA[k,2]^2*(1-R2XkdotXminK[k])))), lower.tail=FALSE)
@@ -111,7 +111,7 @@ return(list(standard_beta=standard_beta, pval = pval, DELTA= DELTA, CI=CI))
 ##					- a vector of length K for non-inf. margin = [-Inf, DELTA[k]] for k in 1,..K
 
 
-equivdiffP2 <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1){
+equivdiffP2 <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=c(1:K)){
 Xmatrix <-cbind(Xmatrix)		
 X <- cbind(1,Xmatrix)	
 N <- dim(Xmatrix)[1]
@@ -125,7 +125,7 @@ R2 <- lmmod$r.squared
 diffR2k <- unlist(lapply(c(2:(K+1)), function(k) {R2-summary(lm(Y~X[,-k]))$r.squared}))
 
 pval <- rep(0, K)
-for(k in 1:K){
+for(k in kvec){
 	pval[k] <- pt(sqrt((N-K-1)*diffR2k[k])/sqrt(1-R2), N-K-1, sqrt(N*DELTA[k])/sqrt(1-DELTA[k]), lower.tail=TRUE)
 	}
 

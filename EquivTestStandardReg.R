@@ -97,7 +97,6 @@ for(k in 1:K){
 }
 
 CI <- confint(lm( scale(Y)~-1+scale(cbind(X[,-1]))), level=0.90)
-print(cbind(Klower , Kupper))
 return(list(standard_beta=standard_beta, pval = pval, DELTA= DELTA, CI=CI))
 }
 

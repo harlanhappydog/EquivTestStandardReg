@@ -96,7 +96,7 @@ if(K==1){	Xmink <- rep(1,N)}
 
 }
 
-for(k in 1:kvec){ 
+for(k in kvec){ 
 
 
 P2_1 = (1-R2XkdotXminK[k])*DELTA[k,1]^{2} + R2YdotXmink[k]

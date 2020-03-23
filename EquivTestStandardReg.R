@@ -1,5 +1,8 @@
 
 
+
+
+
 #################################################################################
 ### function equivBeta()
 
@@ -10,7 +13,7 @@
 ##					- a vector of length K for equiv. margin = [-DELTA[k], DELTA[k]] for k in 1,..K
 
 
-equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=c(1:(K+1))){
+equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1){
 
 Xmatrix <-cbind(Xmatrix)	
 Xmatrix<-cbind(Xmatrix)
@@ -31,7 +34,7 @@ CI <- confint(lm(Y~X[,-1]), level = 0.90)
 
 pval <- p1 <- p2 <- rep(0,K)
 
-for(k in kvec){ 
+for(k in 1:(K+1)){ 
 
 p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
 p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
@@ -43,6 +46,10 @@ names(beta_hat)<-paste("beta", c(1:dim(X)[2])-1, sep="_")
 return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 }
 
+# equivBeta(DELTA=rbind(c(-0.2,0.2),c(-0.2,0.2),c(-0.3,0.15)))
+
+
+
 
 #################################################################################
 ### function equivstandardBeta()
@@ -53,7 +60,7 @@ return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 ## DELTA is either 	- a single number for equiv. margin = [-DELTA, DELTA] for k in 1,..K
 ##					- a vector of length K for equiv. margin = [-DELTA[k], DELTA[k]] for k in 1,..K
 
-equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2]), kvec=c(1:K)){
+equivstandardBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= rep(0.1, dim(Xmatrix)[2]), kvec=1:K){
 Xmatrix <-cbind(Xmatrix)	
 X <- cbind(1,Xmatrix)
 N <- dim(cbind(X[,-1]))[1]
@@ -67,19 +74,20 @@ rownames(DELTA) <- paste("k", c(1:dim(Xmatrix)[2]), sep="_")
 
 unstandard_beta <- lm(Y~ cbind(X[,-1]))$coefficients[-1]
 sigma2_Y <- var(Y)
-sigma2 <- apply(cbind(X[,-1]),2, var)
-standard_beta<-unstandard_beta*(c(sqrt(sigma2))/c(sqrt(sigma2_Y)))
+sigma2_X <- apply(cbind(X[,-1]),2, var)
+standard_beta<-unstandard_beta*(c(sqrt(sigma2_X))/c(sqrt(sigma2_Y)))
+#  lm(scale(Y)~ scale(cbind(X[,-1])))$coefficients[-1]
 
-
-pval_fix<- pval_rdm <- Kupper<- Klower <- p1 <- p2 <- pval <- R2YdotX <- R2XkdotXminK <- lambda_U2 <- lambda_L2 <- upperCI2 <- lowerCI2 <-upperCI <- lowerCI <- SE_beta_FIX <- lambda_U <- lambda_L <- rep(0,K)
+pval_fix<- pval_rdm <- Kupper<- Klower <- p1 <- p2 <- pval <- R2YdotXmink <- R2YdotX <- R2XkdotXminK <- lambda_U2 <- lambda_L2 <- upperCI2 <- lowerCI2 <-upperCI <- lowerCI <- SE_beta_FIX <- lambda_U <- lambda_L <- rep(0,K)
 
 b_vec <- standard_beta
 
 for(k in kvec){ 
 	
-	Xmink <- cbind(cbind(X[,-1])[,-k])
-	if(dim(Xmink)[2]==0){ Xmink <- rep(1,N) }
-	
+if(K>1){	Xmink <- cbind(cbind(X[,-1])[,-k])}
+if(K==1){	Xmink <- rep(1,N)}
+
+	R2YdotXmink[k]      <- summary(lm(Y~ Xmink))$r.squared	
 	R2XkdotXminK[k] <- (summary(lm(cbind(X[,-1])[,k]~ Xmink)))$r.squared
 	R2YdotX[k]      <- (summary(lm(Y~ cbind(X[,-1]))))$r.squared
 	SE_beta_FIX[k]  <- sqrt( (1-R2YdotX[k])/( (1-R2XkdotXminK[k])*(N-K-1)  ) )  # see Kelley2007 eq80.
@@ -88,10 +96,17 @@ for(k in kvec){
 
 }
 
-for(k in kvec){ 
+for(k in 1:kvec){ 
 
-	p1[k] <- pt(b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=DELTA[k,1]*sqrt(((1-R2XkdotXminK[k])*N)/(1 - (DELTA[k,1]^2*(1-R2XkdotXminK[k])))), lower.tail=FALSE)
-	p2[k] <- pt(-b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=-DELTA[k,2]*sqrt(((1-R2XkdotXminK[k])*N)/(1 - (DELTA[k,2]^2*(1-R2XkdotXminK[k])))), lower.tail=FALSE)
+
+P2_1 = (1-R2XkdotXminK[k])*DELTA[k,1]^{2} + R2YdotXmink[k]
+ncp_1 = sqrt(N*(1-R2XkdotXminK[k])) * (DELTA[k,1]/sqrt( 1 - P2_1 ))
+
+P2_2 = (1-R2XkdotXminK[k])*DELTA[k,2]^{2} + R2YdotXmink[k]
+ncp_2 = sqrt(N*(1-R2XkdotXminK[k])) * (-DELTA[k,2]/sqrt( 1 - P2_1 ))
+
+	p1[k] <- pt(b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=ncp_1, lower.tail=FALSE)
+	p2[k] <- pt(-b_vec[k]/SE_beta_FIX[k], N-K-1, ncp=ncp_2, lower.tail=FALSE)
 	pval[k] <- max(c(p1[k], p2[k]))
 
 }
@@ -99,7 +114,6 @@ for(k in kvec){
 CI <- confint(lm( scale(Y)~-1+scale(cbind(X[,-1]))), level=0.90)
 return(list(standard_beta=standard_beta, pval = pval, DELTA= DELTA, CI=CI))
 }
-
 
 #################################################################################
 ### function equivdiffP2()
@@ -111,7 +125,7 @@ return(list(standard_beta=standard_beta, pval = pval, DELTA= DELTA, CI=CI))
 ##					- a vector of length K for non-inf. margin = [-Inf, DELTA[k]] for k in 1,..K
 
 
-equivdiffP2 <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=c(1:K)){
+equivdiffP2 <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, kvec=1:K){
 Xmatrix <-cbind(Xmatrix)		
 X <- cbind(1,Xmatrix)	
 N <- dim(Xmatrix)[1]
@@ -124,15 +138,20 @@ lmmod <- summary(lm(Y~X[,-1]))
 R2 <- lmmod$r.squared
 diffR2k <- unlist(lapply(c(2:(K+1)), function(k) {R2-summary(lm(Y~X[,-k]))$r.squared}))
 
-pval <- rep(0, K)
+R2XkdotXminK <- pval <- rep(0, K)
 for(k in kvec){
-	pval[k] <- pt(sqrt((N-K-1)*diffR2k[k])/sqrt(1-R2), N-K-1, sqrt(N*DELTA[k])/sqrt(1-DELTA[k]), lower.tail=TRUE)
+	if(K>1){		Xmink <- cbind(cbind(X[,-1])[,-k])}
+	if(K==1){	Xmink <- rep(1,N)}
+	R2XkdotXminK[k] <- (summary(lm(cbind(X[,-1])[,k]~ Xmink)))$r.squared
+	ncp_1<-sqrt(N*DELTA[k])/sqrt(1-DELTA[k]+  R2XkdotXminK[k])
+	pval[k] <- pt(sqrt((N-K-1)*diffR2k[k])/sqrt(1-R2), N-K-1, ncp=ncp_1, lower.tail=TRUE)
 	}
 
 return(list(diffR2k= diffR2k, pval= pval, DELTA= DELTA))
 }
 
-	
+
+
 #################################################################################
 
 noninfP2 <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1, random=FALSE, tol=1.0e-12){
@@ -172,6 +191,8 @@ pval <- pf(Fstat, v, n-k-1, lower.tail=TRUE)}
 
 return(list(R2 = R2, pval= pval, DELTA= DELTA))
 }
+
+
 
 	
 	

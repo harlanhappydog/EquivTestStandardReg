@@ -203,7 +203,7 @@ library("mvtnorm")
 
 
 BFstandardBeta<-function(Y= yvec, Xmatrix= Xmat, BFthres=3, kvec=c(1:K)){
-
+Xmatrix<-cbind(Xmatrix)
 K<-dim(Xmatrix)[2]
 mydata<-data.frame(Y, Xmatrix)
 colnames(mydata)<- c(c("yvector"),paste("X",1:K,sep=""))

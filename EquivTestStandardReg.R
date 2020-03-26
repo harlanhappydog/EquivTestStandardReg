@@ -13,38 +13,40 @@
 ##					- a vector of length K for equiv. margin = [-DELTA[k], DELTA[k]] for k in 1,..K
 
 
+
 equivBeta <- function(Y= rnorm(100), Xmatrix= cbind(rnorm(100),rnorm(100)), DELTA= 0.1){
-
-Xmatrix <-cbind(Xmatrix)	
-Xmatrix<-cbind(Xmatrix)
-X <- cbind(1,Xmatrix)
-N <- dim(cbind(X[,-1]))[1]
-K <- dim(cbind(X[,-1]))[2]
-
-if(sum(dim(matrix(DELTA)))==2){ DELTA = cbind(-DELTA,DELTA) }
-DELTA <- t(matrix(rep(DELTA,K),2,))
-colnames(DELTA) <- c("Delta_1", "Delta_2")
-rownames(DELTA) <- paste("k", c(0:(dim(X)[2]-1)), sep="_")
-
-
-lmmod <- summary(lm(Y~X[,-1]))
-beta_hat <- lmmod$coef[,1]
-SE_beta_hat <- lmmod$coef[,2]
-CI <- confint(lm(Y~X[,-1]), level = 0.90)
-
-pval <- p1 <- p2 <- rep(0,K)
-
-for(k in 1:(K+1)){ 
-
-p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
-p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
-pval[k] <- max(c(p1[k],p2[k]))
-
+  
+  Xmatrix <-cbind(Xmatrix)	
+  DELTA<-cbind(DELTA)
+  X <- cbind(1,Xmatrix)
+  N <- dim(cbind(X[,-1]))[1]
+  K <- dim(cbind(X[,-1]))[2]
+  
+  if(sum(dim(matrix(DELTA)))==2){ DELTA = cbind(-DELTA,DELTA) }
+  DELTA <- t(matrix(rep(DELTA,(K+1)),2,))
+  colnames(DELTA) <- c("Delta_1", "Delta_2")
+  rownames(DELTA) <- paste("k", c(0:(dim(X)[2]-1)), sep="_")
+  
+  
+  lmmod <- summary(lm(Y~X[,-1]))
+  beta_hat <- lmmod$coef[,1]
+  SE_beta_hat <- lmmod$coef[,2]
+  CI <- confint(lm(Y~X[,-1]), level = 0.90)
+  
+  pval <- p1 <- p2 <- rep(0,K)
+  
+  for(k in 1:(K+1)){ 
+    
+    p1[k] <- pt((beta_hat[k] - DELTA[k,1])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
+    p2[k] <- pt((-beta_hat[k] + DELTA[k,2])/SE_beta_hat[k], N-K-1, 0, lower.tail=FALSE)
+    pval[k] <- max(c(p1[k],p2[k]))
+    
+  }
+  
+  names(beta_hat)<-paste("beta", c(1:dim(X)[2])-1, sep="_")
+  return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
 }
 
-names(beta_hat)<-paste("beta", c(1:dim(X)[2])-1, sep="_")
-return(list(beta= beta_hat, pval= pval, DELTA= DELTA, CI=CI))
-}
 
 # equivBeta(DELTA=rbind(c(-0.2,0.2),c(-0.2,0.2),c(-0.3,0.15)))
 

@@ -203,30 +203,37 @@ library("mvtnorm")
 
 
 BFstandardBeta<-function(Y= yvec, Xmatrix= Xmat, BFthres=3, kvec=c(1:K)){
-Xmatrix<-cbind(Xmatrix)
-K<-dim(Xmatrix)[2]
-mydata<-data.frame(Y, Xmatrix)
-colnames(mydata)<- c(c("yvector"),paste("X",1:K,sep=""))
-head(mydata)
-BFmod <- regressionBF(yvector~. , data= mydata)
+  Xmatrix<-cbind(Xmatrix)
+  K<-dim(Xmatrix)[2]; print(K)
+  mydata<-data.frame(Y, Xmatrix)
+  colnames(mydata)<- c(c("yvector"),paste("X",1:K,sep=""))
+  head(mydata)
+  BFmod <- regressionBF(yvector~. , data= mydata)
+  BF<-result <- 0*kvec
+  if(K>1){
+  for(k in kvec){
+    
+    whichk<-paste("X",k,sep="")
+    BF_without_k <-BFmod[!grepl(whichk,names(BFmod)$numerator)][
+      which.max(nchar(names(BFmod)$numerator[!grepl(whichk,names(BFmod)$numerator)]))]
+    BF_full <- BFmod[which.max(nchar(names(BFmod)$numerator))]
+    #BF[k] <- as.numeric(slot(BF_without_k/BF_full,"bayesFactor")[1])
+    
+    BF[k] <- exp(as.numeric(slot(BF_without_k,"bayesFactor")[1]))/exp(as.numeric(slot(BF_full,"bayesFactor")[1]))
+  } 
+ }
+  
+  if(K==1){
+    BF<-exp(slot(regressionBF(yvector~. , data= mydata), "bayesFactor")[1])
+  }
+  for(k in kvec){
+    if(BF[k]<= 1/BFthres){result[k]<-"positive" }
+    if(BF[k]>BFthres){result[k]<-"negative"}	
+    if(BF[k]> 1/BFthres & BF[k]<BFthres){result[k]<-"inconclusive"}
+  }
+    return(list(BF=c(BF), BFthres=c(BFthres),conclusion= result))
+  }
 
-BF<-result <- 0*kvec
-for(k in kvec){
-
-whichk<-paste("X",k,sep="")
-BF_without_k <-BFmod[!grepl(whichk,names(BFmod)$numerator)][
-which.max(nchar(names(BFmod)$numerator[!grepl(whichk,names(BFmod)$numerator)]))]
-BF_full <- BFmod[which.max(nchar(names(BFmod)$numerator))]
-#BF[k] <- as.numeric(slot(BF_without_k/BF_full,"bayesFactor")[1])
-
-BF[k] <- exp(as.numeric(slot(BF_without_k,"bayesFactor")[1]))/exp(as.numeric(slot(BF_full,"bayesFactor")[1]))
-
-if(BF[k]<= 1/BFthres){result[k]<-"positive" }
-if(BF[k]>BFthres){result[k]<-"negative"}	
-if(BF[k]> 1/BFthres & BF[k]<BFthres){result[k]<-"inconclusive"}
-}
-return(list(BF=c(BF), BFthres=c(BFthres),conclusion= result))
-}
 
 	      
 	      

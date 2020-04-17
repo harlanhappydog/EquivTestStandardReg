@@ -255,4 +255,27 @@ pval2 <- equivstandardBeta(Y = Y , Xmatrix = Xmatrix , DELTA = DELTA )$pval[k]
 if(pval1 < alpha1){return(list(pval=pval1,result=1))}
 if(pval1 >= alpha1){return(list(pval=pval2,result=-1)) }
 	}
+
+
+
+
+###################################################################################
+linear_reg<- function(y, X, DELTA=0.1, BF_thres=6, alpha = 0.05){
+
+
+lmsummary<-summary((lm(salary ~ rank + discipline + yrs.since.phd + yrs.service + sex, data=Salaries)))
+
+equivBeta <- suppressWarnings(equivstandardBeta(Y = y, Xmatrix = X[,-1], DELTA = DELTA))
+CET_summary_table <- data.frame(beta=lmsummary$coef[,1], std_beta= c(NA,equivBeta$standard_beta), NHST_p=lmsummary$coef[,4], equiv_p=c(NA,equivBeta$pval) ,
+CET_con=c(NA,apply(cbind(lmsummary$coef[,4], c(NA,equivBeta$pval))[-1,],1, CETfunction)))									
+									
+CETfunction<-function(x) { if(x[1]<0.05){return("postive")}
+				if(x[1]>=0.05 & x[2]<0.05){return("negative")}
+					if(x[1]>=0.05 & x[2]>=0.05){return("inconclusive")}
+				}
+				
+BFsumm <- BFstandardBeta(Y= y, Xmatrix=X[,-1], BFthres= BF_thres)
+BF_summary_table <- data.frame(c(NA,BFsumm$BF), BF_con=c(NA,BFsumm$conclusion))
+
+return(print(data.frame(CET_summary_table ,BF_summary_table), digits=3))}
 	

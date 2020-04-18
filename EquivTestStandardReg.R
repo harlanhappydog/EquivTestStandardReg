@@ -274,7 +274,7 @@ CET_summary_table <- data.frame(beta=lmsummary$coef[,1], std_beta= c(NA,equivBet
 CET_con=c(NA,apply(cbind(lmsummary$coef[,4], c(NA,equivBeta$pval))[-1,],1, CETfunction)))									
 				
 BFsumm <- BFstandardBeta(Y= y, Xmatrix=X[,-1], BFthres= BF_thres)
-BF_summary_table <- data.frame(c(NA,BFsumm$BF), BF_con=c(NA,BFsumm$conclusion))
+BF_summary_table <- data.frame(BF_01=c(NA,BFsumm$BF), BF_con=c(NA,BFsumm$conclusion))
 
 return(print(data.frame(CET_summary_table ,BF_summary_table), digits=3))}
 	

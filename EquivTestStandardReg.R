@@ -262,7 +262,7 @@ if(pval1 >= alpha1){return(list(pval=pval2,result=-1)) }
 ###################################################################################
 linear_reg<- function(y, X, DELTA=0.1, BF_thres=6, alpha = 0.05){
 
-lmsummary<-summary((lm(salary ~ rank + discipline + yrs.since.phd + yrs.service + sex, data=Salaries)))
+lmsummary<-summary(lm(y ~ X))
 
 	CETfunction<-function(x) { if(x[1]<0.05){return("postive")}
 				if(x[1]>=0.05 & x[2]<0.05){return("negative")}
